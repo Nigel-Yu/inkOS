@@ -1,16 +1,15 @@
 #include "EPD.h"
-#include "pic.h"
+#include "EPaperDrive.h"
 
 #define POWER_PIN 7
 #define MS_PER_SEC 60000
 
 void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(115200)
+  Serial.begin(115200);
 
   // Display settings
-  pinMode(POWER_PIN, OUTPUT)
-  digitalWrite(POWER_PIN, HIGH)
+  pinMode(POWER_PIN, OUTPUT);
+  digitalWrite(POWER_PIN, HIGH);
   EPD_GPIOInit();
 }
 
