@@ -7,8 +7,8 @@
 // Define the black and white image array as the buffer for the e-paper display
 uint8_t ImageBW[27200];  // Define the buffer size according to the resolution of the e-paper display
 
-const char* ssid = "KowloonTsai";       // WiFi network name
-const char* password = "go4Cisco";     // WiFi password
+const char* ssid = "ssid";       // WiFi network name
+const char* password = "password";     // WiFi password
 
 // OpenWeatherMap API key
 String openWeatherMapApiKey = "exampleKey";
