@@ -145,7 +145,7 @@ typedef enum {
 void Paint_NewImage(UWORD Image_Name, UWORD Width, UWORD Height, UWORD Rotate, UWORD Color);
 void Paint_DrawPixel(UWORD Xpoint, UWORD Ypoint, UWORD Color);
 
-void Paint_Clear(UWORD Color);
+//void Paint_Clear(UWORD Color);
 void Paint_ClearWindows(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color);
 void Paint_SetMirroring(UBYTE mirror);
 void Paint_SetScale(UBYTE scale);
