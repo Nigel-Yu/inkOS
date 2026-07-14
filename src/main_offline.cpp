@@ -5,6 +5,7 @@
 #include "BLEServer.h"               // Include the library for BLE server-related functions
 #include "BLEUtils.h"                // Include the library for BLE utility functions
 #include "BLE2902.h"                 // Include the library for the BLE2902 descriptor, used for characteristic descriptors
+// #include "BluetoothA2DPSink.h"
 
 #define POWER_PIN 7
 #define MS_PER_SEC 1000
@@ -16,7 +17,7 @@
 #define NEXT_KEY 4    // Pin for next page key
 #define OK_KEY 5      // Pin 
 
-#define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E" // Receive channel 
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E" // Transmid channel
 
@@ -65,10 +66,19 @@ void setup()
   EPD_Display_Clear();
   EPD_FastUpdate();
 
+  // bluetooth
   BLEDevice::init("inkOS");
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new InkOsServerCallbacks());
   pService = pServer->createService(SERVICE_UUID);
+  // 
+  pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_TX, 
+    BLECharacteristic::PROPERTY_NOTIFY); // NOTIFY property allows for continuous data flow
+  pCharacteristic->addDescriptor(new BLE2902());
+  // TODO: check on custom callbacks
+  // BLE
+  
+  
 
 
   delay(2 * MS_PER_SEC); // waits for serial to boot
