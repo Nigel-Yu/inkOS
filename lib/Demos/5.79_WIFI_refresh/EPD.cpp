@@ -160,16 +160,12 @@ void EPD_DrawLine(uint16_t Xstart,uint16_t Ystart,uint16_t Xend,uint16_t Yend,ui
         }
     }
 }
-/*******************************************************************
-    函数说明：画矩形函数
-    接口说明：Xstart 矩形x起始坐标参数
-              Ystart 矩形Y起始坐标参数
-              Xend   矩形x结束坐标参数
-              Yend   矩形Y结束坐标参数
-              Color  像素点颜色参数
-              mode   矩形是否进行填充
-    返回值：  无
-*******************************************************************/
+
+/**
+ * @brief Draws a rectangle on the EPD
+ * 
+ * @param mode Fills in rectangle if non-zero int, only outlines if zero
+ */
 void EPD_DrawRectangle(uint16_t Xstart,uint16_t Ystart,uint16_t Xend,uint16_t Yend,uint16_t Color,uint8_t mode)
 {
 	uint16_t i;

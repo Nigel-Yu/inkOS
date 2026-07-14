@@ -1,7 +1,8 @@
 #include <5.79_ble_refresh/spi.h>
 #include <5.79_ble_refresh/EPD_Init.h>
 #include <5.79_ble_refresh/EPD.h>
-// #include <EPD/src/GUI_Paint.cpp>
+#include <WiFi.h>
+#include <secrets.h>
 
 #define POWER_PIN 7
 #define MS_PER_SEC 1000
@@ -15,9 +16,45 @@
 
 uint8_t ImageBW[27200]; // allocate 1 bit monochrome framebuffer in SRAM???????
 
+String ssid = WIFI_SSID;
+String pass = WIFI_PASSWORD;
+
 void setup()
 {
   Serial.begin(115200);
+  
+  // WiFi.mode()
+  WiFi.begin(ssid, pass);
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("Connected");
+  } else {
+        Serial.print("Connection Failed. Status Code: ");
+        switch(WiFi.status()) {
+            case WL_NO_SSID_AVAIL:
+                Serial.println("WL_NO_SSID_AVAIL (Network not found. Check SSID name)");
+                break;
+            case WL_CONNECT_FAILED:
+                Serial.println("WL_CONNECT_FAILED (Password incorrect)");
+                break;
+            case WL_CONNECTION_LOST:
+                Serial.println("WL_CONNECTION_LOST (Signal too weak / dropped)");
+                break;
+            case WL_DISCONNECTED:
+                Serial.println("WL_DISCONNECTED (Module failed to acquire IP / rejected)");
+                break;
+            default:
+                Serial.println(WiFi.status());
+                break;
+        }
+    }
+
+  // while (WiFi.status() != WL_CONNECTED) {
+  //   delay(500);
+  //   Serial.println("Connecting WiFi...");
+  // } 
+  Serial.println("WiFi Connected!");
+  Serial.println("IP address: " + WiFi.localIP().toString());
+
 
   // display settings
   pinMode(POWER_PIN, OUTPUT);

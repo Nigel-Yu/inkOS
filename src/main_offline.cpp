@@ -1,12 +1,10 @@
-// #include <5.79_ble_refresh/spi.h>
-// #include <5.79_ble_refresh/EPD_Init.h>
-// #include <5.79_ble_refresh/EPD.h>
-// #include <EPD/src/GUI_Paint.h>
-
-#include <spi.h>
-#include <EPD_Init.h>
-#include <EPD.h>
-#include <EPD/src/GUI_Paint.h>
+#include <5.79_ble_refresh/spi.h>
+#include <5.79_ble_refresh/EPD_Init.h>
+#include <5.79_ble_refresh/EPD.h>
+#include "BLEDevice.h"               // Include the library for BLE device-related functions
+#include "BLEServer.h"               // Include the library for BLE server-related functions
+#include "BLEUtils.h"                // Include the library for BLE utility functions
+#include "BLE2902.h"                 // Include the library for the BLE2902 descriptor, used for characteristic descriptors
 
 #define POWER_PIN 7
 #define MS_PER_SEC 1000
@@ -16,12 +14,40 @@
 #define EXIT_KEY 1    // Pin for exit key
 #define PRV_KEY 6     // Pin for previous page key
 #define NEXT_KEY 4    // Pin for next page key
-#define OK_KEY 5      // Pin for confirm key
+#define OK_KEY 5      // Pin 
 
-uint8_t ImageBW[27200]; // allocate 1 bit monochrome framebuffer in SRAM???????
+#define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E" // Receive channel 
+#define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E" // Transmid channel
 
-// helpers
-//void drawtext
+// pointers
+BLECharacteristic *pCharacteristic;
+BLEServer *pServer;
+BLEService *pService;
+bool deviceConnected = false;
+
+class InkOsServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer *pServer) override {
+    deviceConnected = true;
+    Serial.println("Bluetooth Connected.");
+  }
+  void onDisconnect(BLEServer *pServer) override {
+    deviceConnected = false;
+    Serial.println("Bluetooth Disconnected.");
+    pServer->startAdvertising(); // Announces its presence over bluetooth
+    Serial.println("Advertising started.");
+  }
+};
+
+void drawStatusBar(uint16_t x, uint16_t y, uint16_t cur, uint16_t tot) {
+  if (cur > tot) cur = tot; 
+  uint8_t height = 20, width = 85;
+  EPD_DrawRectangle(x, y, x + width, y + height, BLACK, 0);
+  EPD_DrawRectangle(x, y, x + ((float) cur / tot) * width, y + height, BLACK, 1);
+}
+
+// allocate 1 bit monochrome framebuffer in SRAM???????
+uint8_t ImageBW[27200]; // uint8_t used instead of int to save memory
 
 void setup()
 {
@@ -39,30 +65,47 @@ void setup()
   EPD_Display_Clear();
   EPD_FastUpdate();
 
-  delay(4 * MS_PER_SEC); // waits for serial to boot
+  BLEDevice::init("inkOS");
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new InkOsServerCallbacks());
+  pService = pServer->createService(SERVICE_UUID);
+
+
+  delay(2 * MS_PER_SEC); // waits for serial to boot
   Serial.println("Setup Complete.");
 }
 
 void loop()
 {
-  char buffer[40];
   EPD_FastMode1Init(); // wake up from deep sleep
 
   Paint_NewImage(ImageBW, EPD_W, EPD_H, Rotation, WHITE); // gives pointer of array
   Paint_Clear(WHITE);
 
-  // draw
+  // Boundaries
   EPD_DrawLine(240, 0, 240, 270, BLACK);
   EPD_DrawLine(540, 0, 540, 270, BLACK);
-  Paint_DrawString_EN(20, 10, "Bluetooth Media Player", &Font24, WHITE, BLACK);
+  // Headers
+  EPD_ShowString(35, 10, "Bluetooth Media Player", 16, BLACK);
+  EPD_ShowString(360, 10, "Schedule", 16, BLACK);
+  EPD_ShowString(610, 10, "Hardware Status", 16, BLACK);
   
-
-
+  // Hardware Status
+  char statBuff[32]; // temporary storage of stats
+  snprintf(statBuff, sizeof(statBuff), "Free PSRAM: %u KB", ESP.getFreePsramInKb());
+  EPD_ShowString(590, 40, statBuff, 16, BLACK);
+  drawStatusBar(630, 65, ESP.getFreePsramInKb(), ESP.getPsramSizeInKb());
+  snprintf(statBuff, sizeof(statBuff), "Free Heap: %u KB", ESP.getFreeHeap() / 1024);
+  EPD_ShowString(590, 120, statBuff, 16, BLACK);
+  drawStatusBar(630, 145, ESP.getFreeHeap(), ESP.getHeapSize());
+  snprintf(statBuff, sizeof(statBuff), "Internal Temp: %u C", static_cast<uint16_t>(temperatureRead()));
+  EPD_ShowString(590, 200, statBuff, 16, BLACK);
+  EPD_DrawCircle(730, 202, 2, BLACK, false);
+  
   EPD_Display(ImageBW);
   EPD_FastUpdate(); // TODO: try part & fast update
-  // EPD_Clear_R26A6H(); // clear cache
   Serial.println("Loop Complete.");
   EPD_DeepSleep();
 
-  delay(10 * MS_PER_MIN); // runs every 10 mins
+  delay(30 * MS_PER_MIN); // runs every 30 mins
 }
