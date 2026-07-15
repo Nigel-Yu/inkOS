@@ -1,6 +1,6 @@
-#include <5.79_ble_refresh/spi.h>
-#include <5.79_ble_refresh/EPD_Init.h>
-#include <5.79_ble_refresh/EPD.h>
+#include <spi.h>
+#include <5EPD_Init.h>
+#include <EPD.h>
 #include <WiFi.h>
 #include <secrets.h>
 
