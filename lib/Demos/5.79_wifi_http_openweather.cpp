@@ -36,7 +36,102 @@ String humidity;
 String sea_level;
 String wind_speed;
 String city_js;
-int weather_flag = 0;                     // Weather icon flag
+int weather_flag = 0; // Weather icon flag
+
+// Define the HTTP GET request function
+String httpGETRequest(const char* serverName) {
+  WiFiClient client;
+  HTTPClient http;
+
+  // Initialize the HTTP client and specify the requested server URL
+  http.begin(client, serverName);
+
+  // Send an HTTP GET request
+  httpResponseCode = http.GET();
+
+  // Initialize the returned response content
+  String payload = "{}";
+
+  // Check the response code and process the response content
+  if (httpResponseCode > 0) {
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode); // Print the response code
+    payload = http.getString(); // Get the response content
+  }
+  else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode); // Print the error code
+  }
+  // Release the HTTP client resources
+  http.end();
+
+  return payload; // Return the response content
+}
+
+void js_analysis()
+{
+  // Check if successfully connected to the WiFi network
+  if (WiFi.status() == WL_CONNECTED) {
+    // Build the OpenWeatherMap API request URL
+    String serverPath = "http://api.openweathermap.org/data/2.5/weather?q=" + city + "," + countryCode + "&APPID=" + openWeatherMapApiKey + "&units=metric";
+
+    // Loop until a valid HTTP response code of 200 is obtained
+    while (httpResponseCode != 200) {
+      // Send an HTTP GET request and get the response content
+      jsonBuffer = httpGETRequest(serverPath.c_str());
+      Serial.println(jsonBuffer); // Print the obtained JSON data
+      myObject = JSON.parse(jsonBuffer); // Parse the JSON data
+
+      // Check if JSON parsing was successful
+      if (JSON.typeof(myObject) == "undefined") {
+        Serial.println("Parsing input failed!"); // Error message when parsing fails
+        return; // Exit the function if parsing fails
+      }
+      delay(2000); // Wait for 2 seconds before retrying
+    }
+
+    // Extract weather information from the parsed JSON data
+    weather = JSON.stringify(myObject["weather"][0]["main"]); // Weather main information
+    temperature = JSON.stringify(myObject["main"]["temp"]); // Temperature
+    humidity = JSON.stringify(myObject["main"]["humidity"]); // Humidity
+    sea_level = JSON.stringify(myObject["main"]["sea_level"]); // Sea level pressure
+    wind_speed = JSON.stringify(myObject["wind"]["speed"]); // Wind speed
+    city_js = JSON.stringify(myObject["name"]); // City name
+
+    // Print the extracted weather information
+    Serial.print("String weather: ");
+    Serial.println(weather);
+    Serial.print("String Temperature: ");
+    Serial.println(temperature);
+    Serial.print("String humidity: ");
+    Serial.println(humidity);
+    Serial.print("String sea_level: ");
+    Serial.println(sea_level);
+    Serial.print("String wind_speed: ");
+    Serial.println(wind_speed);
+    Serial.print("String city_js: ");
+    Serial.println(city_js);
+
+    // Set the weather icon flag used on the weather description
+    if (weather.indexOf("clouds") != -1 || weather.indexOf("Clouds") != -1) {
+      weather_flag = 1; // Cloudy
+    } else if (weather.indexOf("clear sky") != -1 || weather.indexOf("Clear sky") != -1) {
+      weather_flag = 3; // Clear sky
+    } else if (weather.indexOf("rain") != -1 || weather.indexOf("Rain") != -1) {
+      weather_flag = 5; // Rainy
+    } else if (weather.indexOf("thunderstorm") != -1 || weather.indexOf("Thunderstorm") != -1) {
+      weather_flag = 2; // Thunderstorm
+    } else if (weather.indexOf("snow") != -1 || weather.indexOf("Snow") != -1) {
+      weather_flag = 4; // Snowy
+    } else if (weather.indexOf("mist") != -1 || weather.indexOf("Mist") != -1) {
+      weather_flag = 0; // Foggy
+    }
+  }
+  else {
+    // Print a message if the WiFi connection is lost
+    Serial.println("WiFi Disconnected");
+  }
+}
 
 // Function to display weather forecast
 void UI_weather_forecast()
@@ -120,99 +215,4 @@ void loop() {
   js_analysis();   // Parse weather data
   UI_weather_forecast(); // Update weather display
   delay(1000 * 60 * 60); // Main loop delay for 1 hour
-}
-
-void js_analysis()
-{
-  // Check if successfully connected to the WiFi network
-  if (WiFi.status() == WL_CONNECTED) {
-    // Build the OpenWeatherMap API request URL
-    String serverPath = "http://api.openweathermap.org/data/2.5/weather?q=" + city + "," + countryCode + "&APPID=" + openWeatherMapApiKey + "&units=metric";
-
-    // Loop until a valid HTTP response code of 200 is obtained
-    while (httpResponseCode != 200) {
-      // Send an HTTP GET request and get the response content
-      jsonBuffer = httpGETRequest(serverPath.c_str());
-      Serial.println(jsonBuffer); // Print the obtained JSON data
-      myObject = JSON.parse(jsonBuffer); // Parse the JSON data
-
-      // Check if JSON parsing was successful
-      if (JSON.typeof(myObject) == "undefined") {
-        Serial.println("Parsing input failed!"); // Error message when parsing fails
-        return; // Exit the function if parsing fails
-      }
-      delay(2000); // Wait for 2 seconds before retrying
-    }
-
-    // Extract weather information from the parsed JSON data
-    weather = JSON.stringify(myObject["weather"][0]["main"]); // Weather main information
-    temperature = JSON.stringify(myObject["main"]["temp"]); // Temperature
-    humidity = JSON.stringify(myObject["main"]["humidity"]); // Humidity
-    sea_level = JSON.stringify(myObject["main"]["sea_level"]); // Sea level pressure
-    wind_speed = JSON.stringify(myObject["wind"]["speed"]); // Wind speed
-    city_js = JSON.stringify(myObject["name"]); // City name
-
-    // Print the extracted weather information
-    Serial.print("String weather: ");
-    Serial.println(weather);
-    Serial.print("String Temperature: ");
-    Serial.println(temperature);
-    Serial.print("String humidity: ");
-    Serial.println(humidity);
-    Serial.print("String sea_level: ");
-    Serial.println(sea_level);
-    Serial.print("String wind_speed: ");
-    Serial.println(wind_speed);
-    Serial.print("String city_js: ");
-    Serial.println(city_js);
-
-    // Set the weather icon flag used on the weather description
-    if (weather.indexOf("clouds") != -1 || weather.indexOf("Clouds") != -1) {
-      weather_flag = 1; // Cloudy
-    } else if (weather.indexOf("clear sky") != -1 || weather.indexOf("Clear sky") != -1) {
-      weather_flag = 3; // Clear sky
-    } else if (weather.indexOf("rain") != -1 || weather.indexOf("Rain") != -1) {
-      weather_flag = 5; // Rainy
-    } else if (weather.indexOf("thunderstorm") != -1 || weather.indexOf("Thunderstorm") != -1) {
-      weather_flag = 2; // Thunderstorm
-    } else if (weather.indexOf("snow") != -1 || weather.indexOf("Snow") != -1) {
-      weather_flag = 4; // Snowy
-    } else if (weather.indexOf("mist") != -1 || weather.indexOf("Mist") != -1) {
-      weather_flag = 0; // Foggy
-    }
-  }
-  else {
-    // Print a message if the WiFi connection is lost
-    Serial.println("WiFi Disconnected");
-  }
-}
-
-// Define the HTTP GET request function
-String httpGETRequest(const char* serverName) {
-  WiFiClient client;
-  HTTPClient http;
-
-  // Initialize the HTTP client and specify the requested server URL
-  http.begin(client, serverName);
-
-  // Send an HTTP GET request
-  httpResponseCode = http.GET();
-
-  // Initialize the returned response content
-  String payload = "{}";
-
-  // Check the response code and process the response content
-  if (httpResponseCode > 0) {
-    Serial.print("HTTP Response code: ");
-    Serial.println(httpResponseCode); // Print the response code
-    payload = http.getString(); // Get the response content
-  }
-  else {
-    Serial.print("Error code: ");
-    Serial.println(httpResponseCode); // Print the error code
-  }
-  // Release the HTTP client resources
-  http.end();
-
-  return payload; // Return the response content
 }

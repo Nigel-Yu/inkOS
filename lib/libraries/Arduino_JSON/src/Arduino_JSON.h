@@ -1,5 +1,5 @@
 /*
-  This file is part of the Arduino_JSON library.
+  This file is part of the Arduino JSON library.
   Copyright (c) 2019 Arduino SA. All rights reserved.
 
   This library is free software; you can redistribute it and/or

@@ -1,6 +1,6 @@
-#include <5.79_ble_refresh/spi.h>
-#include <5.79_ble_refresh/EPD_Init.h>
-#include <5.79_ble_refresh/EPD.h>
+#include <spi.h>
+#include <EPD_Init.h>
+#include <EPD.h>
 #include "BLEDevice.h"               // Include the library for BLE device-related functions
 #include "BLEServer.h"               // Include the library for BLE server-related functions
 #include "BLEUtils.h"                // Include the library for BLE utility functions

@@ -1,5 +1,5 @@
 /*
-  This file is part of the Arduino_JSON library.
+  This file is part of the Arduino JSON library.
   Copyright (c) 2019 Arduino SA. All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -18,10 +18,12 @@
 */
 
 #include "JSON.h"
-#include "cjson/cJSON.h"
 
-#ifndef JSON_HOOKS
-#define JSON_HOOKS
+// #define JSON_HOOKS
+
+#ifdef JSON_HOOKS
+
+#include "cjson/cJSON.h"
 
 static int jsonAllocations = 0;
 

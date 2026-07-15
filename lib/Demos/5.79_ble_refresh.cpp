@@ -32,92 +32,6 @@ size_t data_size = 0; // Size of file data
 
 String filename; // Array for storing file names
 
-// BLE characteristic callback class
-class MyCallbacks : public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) {
-      std::string value = pCharacteristic->getValue().c_str();
-
-      if (value.length() > 0) {
-        Serial.printf(".");
-
-        // Assuming the client sends a specific end marker when data transmission is complete
-        if (value == "OK") {
-          dataReceived = true;
-          return;
-        }
-
-        size_t len = value.length();
-        if (len > 0) {
-          // Append received data to the buffer
-          dataBuffer.insert(dataBuffer.end(), value.begin(), value.end());
-          totalReceivedBytes += len; // Update total received bytes
-        }
-
-
-      }
-    }
-};
-
-// Setup function to initialize hardware and BLE
-void setup() {
-  Serial.begin(115200); // Initialize serial communication
-
-  if (SPIFFS.begin()) {  // Start the SPIFFS file system
-    Serial.println("SPIFFS Started.");
-  } else {
-    // If SPIFFS fails to start, try formatting the SPIFFS partition
-    if (SPIFFS.format()) {
-      // Formatting successful, print message and restart the device
-      Serial.println("SPIFFS partition formatted successfully");
-      ESP.restart();
-    } else {
-      // Formatting failed, print message
-      Serial.println("SPIFFS partition format failed");
-    }
-    return;
-  }
-
-  // Initialize BLE
-  BLEDevice::init("ESP32_S3_BLE");
-  BLEServer *pServer = BLEDevice::createServer();
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-
-  pCharacteristicRX = pService->createCharacteristic(
-                        CHARACTERISTIC_UUID,
-                        BLECharacteristic::PROPERTY_WRITE
-                      );
-
-  // Set the callback function for the BLE characteristic
-  pCharacteristicRX->setCallbacks(new MyCallbacks());
-  pCharacteristicRX->addDescriptor(new BLE2902());
-
-  pService->start();
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->start();
-
-  // Initialize the display
-  pinMode(7, OUTPUT);
-  digitalWrite(7, HIGH); // Turn on the display power
-  EPD_GPIOInit(); // Initialize EPD control pins
-  Paint_NewImage(ImageBW, EPD_W, EPD_H, Rotation, WHITE); // Create a new image
-  Paint_Clear(WHITE); // Clear the image
-
-  EPD_FastMode1Init(); // Initialize EPD fast mode
-  EPD_Display_Clear(); // Clear the display
-  EPD_Update(); // Update the display
-
-  UI_price(); // Display the price interface
-}
-
-
-
-// Main loop function
-void loop() {
-  // If the flag dataReceived is true, process the data
-  main_ui(); // Process main interface update
-}
-
 // Process BLE data and save it to a file
 void ble_pic()
 {
@@ -199,25 +113,37 @@ void ble_pic()
   }
 }
 
-// Clear the content of the display
-void clear_all()
-{
-  // Initialize the fast mode of the e-ink screen
-  EPD_FastMode1Init();
-  // Clear the e-ink screen
-  EPD_Display_Clear();
-  // Update the display
-  EPD_Update();
-}
+// BLE characteristic callback class
+class MyCallbacks : public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic *pCharacteristic) {
+      std::string value = pCharacteristic->getValue().c_str();
 
+      if (value.length() > 0) {
+        Serial.printf(".");
+
+        // Assuming the client sends a specific end marker when data transmission is complete
+        if (value == "OK") {
+          dataReceived = true;
+          return;
+        }
+
+        size_t len = value.length();
+        if (len > 0) {
+          // Append received data to the buffer
+          dataBuffer.insert(dataBuffer.end(), value.begin(), value.end());
+          totalReceivedBytes += len; // Update total received bytes
+        }
+
+
+      }
+    }
+};
 
 // Main user interface processing function
 void main_ui()
 {
   // Process BLE data
   ble_pic();
-
-
 }
 
 // User interface function: Display price information
@@ -265,14 +191,78 @@ void UI_price()
       Serial.write(file.read());
     }
     file.close();
-
-
-
     EPD_ShowPicture(500, 80, 256, 184, price_formerly, WHITE);
-
-
   }
   EPD_Display(ImageBW);      // Display the image stored in the ImageBW array
   EPD_FastUpdate();          // Perform a fast update to refresh the screen
   EPD_DeepSleep();          // Set the screen to deep sleep mode to save power
+}
+
+// Setup function to initialize hardware and BLE
+void setup() {
+  Serial.begin(115200); // Initialize serial communication
+
+  if (SPIFFS.begin()) {  // Start the SPIFFS file system
+    Serial.println("SPIFFS Started.");
+  } else {
+    // If SPIFFS fails to start, try formatting the SPIFFS partition
+    if (SPIFFS.format()) {
+      // Formatting successful, print message and restart the device
+      Serial.println("SPIFFS partition formatted successfully");
+      ESP.restart();
+    } else {
+      // Formatting failed, print message
+      Serial.println("SPIFFS partition format failed");
+    }
+    return;
+  }
+
+  // Initialize BLE
+  BLEDevice::init("ESP32_S3_BLE");
+  BLEServer *pServer = BLEDevice::createServer();
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+
+  pCharacteristicRX = pService->createCharacteristic(
+                        CHARACTERISTIC_UUID,
+                        BLECharacteristic::PROPERTY_WRITE
+                      );
+
+  // Set the callback function for the BLE characteristic
+  pCharacteristicRX->setCallbacks(new MyCallbacks());
+  pCharacteristicRX->addDescriptor(new BLE2902());
+
+  pService->start();
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->start();
+
+  // Initialize the display
+  pinMode(7, OUTPUT);
+  digitalWrite(7, HIGH); // Turn on the display power
+  EPD_GPIOInit(); // Initialize EPD control pins
+  Paint_NewImage(ImageBW, EPD_W, EPD_H, Rotation, WHITE); // Create a new image
+  Paint_Clear(WHITE); // Clear the image
+
+  EPD_FastMode1Init(); // Initialize EPD fast mode
+  EPD_Display_Clear(); // Clear the display
+  EPD_Update(); // Update the display
+
+  UI_price(); // Display the price interface
+}
+
+// Main loop function
+void loop() {
+  // If the flag dataReceived is true, process the data
+  main_ui(); // Process main interface update
+}
+
+// Clear the content of the display
+void clear_all()
+{
+  // Initialize the fast mode of the e-ink screen
+  EPD_FastMode1Init();
+  // Clear the e-ink screen
+  EPD_Display_Clear();
+  // Update the display
+  EPD_Update();
 }

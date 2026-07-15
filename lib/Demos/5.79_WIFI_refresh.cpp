@@ -131,69 +131,6 @@ void okPage()
   }
 }
 
-
-void setup() {
-  Serial.begin(115200);  // Start serial communication with a baud rate of 115200.
-
-  if (SPIFFS.begin()) {  // Start the SPIFFS file system.
-    Serial.println("SPIFFS Started.");  // SPIFFS started successfully. Output a prompt message.
-  } else {
-    // If SPIFFS fails to start, try formatting the SPIFFS partition.
-    if (SPIFFS.format()) {
-      // Formatting successful. Output a prompt message and restart the device.
-      Serial.println("SPIFFS partition formatted successfully");
-      ESP.restart();  // Restart the device.
-    } else {
-      // Formatting failed. Output a prompt message.
-      Serial.println("SPIFFS partition format failed");
-    }
-    return;  // Exit the setup function.
-  }
-
-  Serial.println("Try Connecting to ");
-
-  WiFi.mode(WIFI_AP);  // Set the WiFi mode to AP (access point).
-  boolean result = WiFi.softAP(AP_SSID, "");  // Start the WiFi hotspot with SSID as AP_SSID and no password.
-  if (result) {
-    IPAddress myIP = WiFi.softAPIP();  // Get the IP address of the hotspot.
-    // Print hotspot information.
-    Serial.println("");
-    Serial.print("Soft-AP IP address = ");
-    Serial.println(myIP);
-    Serial.println(String("MAC address = ") + WiFi.softAPmacAddress().c_str());
-    Serial.println("waiting...");
-  } else {
-    // If starting the hotspot fails, output a prompt message and delay for 3 seconds.
-    Serial.println("WiFiAP Failed");
-    delay(3000);
-  }
-
-  // Configure HTTP server routes.
-  server.on("/", handle_root);  // Root directory route. Call handle_root function when accessing the root directory.
-  server.on("/ok", okPage);  // /ok route. Call okPage function when accessing /ok.
-  server.begin();  // Start the HTTP server.
-  Serial.println("HTTP server started");  // Output HTTP server start success message.
-  delay(100);  // Delay for 100 milliseconds.
-
-  // Set the screen power control pin.
-  pinMode(7, OUTPUT);  // Set pin 7 as output mode.
-  digitalWrite(7, HIGH);  // Set pin 7 to high level to turn on the screen power.
-
-  // Initialize the EPD (electronic paper display) screen.
-  EPD_GPIOInit();  // Initialize the GPIO pins of the EPD.
-  Paint_NewImage(ImageBW, EPD_W, EPD_H, Rotation, WHITE);  // Create a new canvas with size EPD_W x EPD_H and background color white.
-  Paint_Clear(WHITE);  // Clear the canvas with background color white.
-
-  EPD_FastMode1Init();  // Initialize the fast mode 1 of the EPD.
-  EPD_Display_Clear();  // Clear the EPD display content.
-  EPD_Update();  // Update the display.
-  UI_price();  // Display price information.
-}
-
-void loop() {
-  server.handleClient();  // Handle client requests.
-}
-
 void UI_price()
 {
   EPD_GPIOInit();  // Reinitialize the GPIO pins of the EPD electronic ink screen.
@@ -263,3 +200,66 @@ void UI_price()
     EPD_DeepSleep();  // Set the screen to deep sleep mode to save power.
   }
 }
+
+void setup() {
+  Serial.begin(115200);  // Start serial communication with a baud rate of 115200.
+
+  if (SPIFFS.begin()) {  // Start the SPIFFS file system.
+    Serial.println("SPIFFS Started.");  // SPIFFS started successfully. Output a prompt message.
+  } else {
+    // If SPIFFS fails to start, try formatting the SPIFFS partition.
+    if (SPIFFS.format()) {
+      // Formatting successful. Output a prompt message and restart the device.
+      Serial.println("SPIFFS partition formatted successfully");
+      ESP.restart();  // Restart the device.
+    } else {
+      // Formatting failed. Output a prompt message.
+      Serial.println("SPIFFS partition format failed");
+    }
+    return;  // Exit the setup function.
+  }
+
+  Serial.println("Try Connecting to ");
+
+  WiFi.mode(WIFI_AP);  // Set the WiFi mode to AP (access point).
+  boolean result = WiFi.softAP(AP_SSID, "");  // Start the WiFi hotspot with SSID as AP_SSID and no password.
+  if (result) {
+    IPAddress myIP = WiFi.softAPIP();  // Get the IP address of the hotspot.
+    // Print hotspot information.
+    Serial.println("");
+    Serial.print("Soft-AP IP address = ");
+    Serial.println(myIP);
+    Serial.println(String("MAC address = ") + WiFi.softAPmacAddress().c_str());
+    Serial.println("waiting...");
+  } else {
+    // If starting the hotspot fails, output a prompt message and delay for 3 seconds.
+    Serial.println("WiFiAP Failed");
+    delay(3000);
+  }
+
+  // Configure HTTP server routes.
+  server.on("/", handle_root);  // Root directory route. Call handle_root function when accessing the root directory.
+  server.on("/ok", okPage);  // /ok route. Call okPage function when accessing /ok.
+  server.begin();  // Start the HTTP server.
+  Serial.println("HTTP server started");  // Output HTTP server start success message.
+  delay(100);  // Delay for 100 milliseconds.
+
+  // Set the screen power control pin.
+  pinMode(7, OUTPUT);  // Set pin 7 as output mode.
+  digitalWrite(7, HIGH);  // Set pin 7 to high level to turn on the screen power.
+
+  // Initialize the EPD (electronic paper display) screen.
+  EPD_GPIOInit();  // Initialize the GPIO pins of the EPD.
+  Paint_NewImage(ImageBW, EPD_W, EPD_H, Rotation, WHITE);  // Create a new canvas with size EPD_W x EPD_H and background color white.
+  Paint_Clear(WHITE);  // Clear the canvas with background color white.
+
+  EPD_FastMode1Init();  // Initialize the fast mode 1 of the EPD.
+  EPD_Display_Clear();  // Clear the EPD display content.
+  EPD_Update();  // Update the display.
+  UI_price();  // Display price information.
+}
+
+void loop() {
+  server.handleClient();  // Handle client requests.
+}
+
