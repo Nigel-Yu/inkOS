@@ -24,6 +24,7 @@
 
 #include "JSONVar.h"
 
+
 class JSONClass {
 public:
   JSONClass();

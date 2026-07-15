@@ -18,12 +18,10 @@
 */
 
 #include "JSON.h"
-
-// #define JSON_HOOKS
-
-#ifdef JSON_HOOKS
-
 #include "cjson/cJSON.h"
+
+#ifndef JSON_HOOKS
+#define JSON_HOOKS
 
 static int jsonAllocations = 0;
 

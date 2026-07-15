@@ -136,7 +136,7 @@ void loop() {
       OK_NUM++; 
       flag = 1; 
     }
-  }Reset Tag
+  }//Reset Tag
   
   // If a button is pressed, update the display content
   if (flag == 1)

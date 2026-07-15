@@ -64,22 +64,25 @@ void setup()
   // full screen refresh
   EPD_FastMode1Init();
   EPD_Display_Clear();
-  EPD_FastUpdate();
+  EPD_PartUpdate();
 
   // bluetooth
-  BLEDevice::init("inkOS");
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new InkOsServerCallbacks());
-  pService = pServer->createService(SERVICE_UUID);
-  // 
-  pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_TX, 
-    BLECharacteristic::PROPERTY_NOTIFY); // NOTIFY property allows for continuous data flow
-  pCharacteristic->addDescriptor(new BLE2902());
-  // TODO: check on custom callbacks
-  // BLE
-  
-  
+  // BLEDevice::init("inkOS");
+  // pServer = BLEDevice::createServer();
+  // pServer->setCallbacks(new InkOsServerCallbacks());
+  // pService = pServer->createService(SERVICE_UUID);
+  // // 
+  // pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_TX, 
+  //   BLECharacteristic::PROPERTY_NOTIFY); // NOTIFY property allows for continuous data flow
+  // pCharacteristic->addDescriptor(new BLE2902());
+  // // TODO: check on custom callbacks
+  // // BLE
 
+  // pinMode(HOME_KEY, INPUT);
+  // pinMode(EXIT_KEY, INPUT);
+  // pinMode(PRV_KEY, INPUT);
+  // pinMode(NEXT_KEY, INPUT);
+  // pinMode(OK_KEY, INPUT);    
 
   delay(2 * MS_PER_SEC); // waits for serial to boot
   Serial.println("Setup Complete.");
@@ -87,7 +90,7 @@ void setup()
 
 void loop()
 {
-  EPD_FastMode1Init(); // wake up from deep sleep
+  //EPD_FastMode1Init(); // wake up from deep sleep
 
   Paint_NewImage(ImageBW, EPD_W, EPD_H, Rotation, WHITE); // gives pointer of array
   Paint_Clear(WHITE);
@@ -98,7 +101,7 @@ void loop()
   // Headers
   EPD_ShowString(35, 10, "Bluetooth Media Player", 16, BLACK);
   EPD_ShowString(360, 10, "Schedule", 16, BLACK);
-  EPD_ShowString(610, 10, "Hardware Status", 16, BLACK);
+  EPD_ShowString(610, 10, "System Monitor", 16, BLACK);
   
   // Hardware Status
   char statBuff[32]; // temporary storage of stats
@@ -113,9 +116,15 @@ void loop()
   EPD_DrawCircle(730, 202, 2, BLACK, false);
   
   EPD_Display(ImageBW);
-  EPD_FastUpdate(); // TODO: try part & fast update
-  Serial.println("Loop Complete.");
-  EPD_DeepSleep();
+  EPD_PartUpdate(); // TODO: try part & fast update
+  //Serial.println("Loop Complete.");
+  //EPD_DeepSleep();
 
-  delay(30 * MS_PER_MIN); // runs every 30 mins
+  if (digitalRead(HOME_KEY) == 0) {
+    delay(100); // anti shake delay
+    if (digitalRead(HOME_KEY) == 1) {
+      Serial.print("key pressed");
+    }
+  }
+  //delay(30 * MS_PER_MIN); // runs every 30 mins
 }
